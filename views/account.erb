@@ -1,0 +1,11 @@
+<% if locals[:fails] %>
+  <p><%= locals[:fails] %></p>
+<% end %>
+
+<form action="account" method="post">
+  <input type="text" name="name" placeholder="ユーザ名">
+  <input type="text" name="email" placeholder="メール">
+  <input type="password" name="pass" placeholder="パスワード">
+  <input type="password" name="passConf" placeholder="パスワード確認">
+  <button type="submit">サインアップ</button>
+</form>

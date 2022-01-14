@@ -1,0 +1,20 @@
+default: &default
+  adapter: mysql2
+  #encoding: unicode
+  # For details on connection pooling, see Rails configuration guide
+  # https://guides.rubyonrails.org/configuring.html#database-pooling
+  host: <%= ENV.fetch("MYSQL_HOST") { '127.0.0.1' } %>
+  port: 3306
+  username: <%= ENV["MYSQL_USER"] %>
+  password: <%= ENV["MYSQL_PASS"] %>
+
+development:
+  <<: *default
+  database: <%= ENV["MYSQL_DATABASE"] %>
+
+test:
+  <<: *default
+  database: <%= ENV["MYSQL_DATABASE"] %>
+
+production:
+  database: <%= ENV['MYSQL_DATABASE'] %>

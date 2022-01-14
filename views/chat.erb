@@ -1,0 +1,14 @@
+<p>こんにちは<%= name %>さん</p>
+<a href="/logout">ログアウト</a>
+<form action="/chat" method="post">
+  <input name="content" placeholder="投稿" />
+  <button type="submit">送信</button>
+</form>
+
+<table>
+	<% chats.each do |chat| %>
+	<tr>
+        <td><%= chat[:content] %></td>
+		<td><%= chat[:time] %></td>
+	<% end %>
+</table>

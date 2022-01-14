@@ -1,0 +1,14 @@
+<% if name %>
+  <p>こんにちは<%= name %>さん</p>
+  <a href="/logout">ログアウト</a>
+  <form action="/chat" method="post">
+    <input name="content" placeholder="投稿" />
+    <button type="submit">送信</button>
+  </form>
+<% else %>
+  <form action="login" method="post">
+    <input name="name" placeholder="ユーザ名">
+    <input name="pass" placeholder="パスワード">
+    <button type="submit">ログイン</button>
+  </form>
+<% end %>
