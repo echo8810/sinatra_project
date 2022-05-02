@@ -1,5 +1,6 @@
 require_relative '../dbconnector.rb'
 require 'logger'
+require 'bcrypt'
 
 @@logger = Logger.new('sinatra.log')
 
@@ -12,21 +13,30 @@ class DbTUserManager
     def user_push(params)
         now = Time.now
         errors = validate(params)
-        @@logger.info errors
         if errors.empty?
+            securePass = password_digest(params['pass'])
             db_client.prepare(
               "INSERT into users (name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
-            ).execute(params['name'], params['email'], params['pass'], now, now)
-            return false
+            ).execute(params['name'], params['email'], securePass, now, now)
+            return errors
         else
             return errors
         end
     end
       
     def user_fetch(params)
-        result = db_client.prepare("SELECT * FROM users WHERE name = ?").execute(params['name']).first
-        return unless result
-        result[:password] == params['pass'] ? result : nil
+        result = db_client.prepare("SELECT * FROM users WHERE email = ?").execute(params['email']).first
+        @@logger.info '----user_fetch----------'
+        @@logger.info result
+        return unless result[:id]
+        if result[:password] == password_digest(params['pass'])
+            res = Hash.new()
+            res['name' ] = result[:name]
+            res['email'] = result[:email]
+            return res 
+        else
+            return false
+        end
     end
 
     def validate(params)
@@ -41,9 +51,9 @@ class DbTUserManager
         errors['pass_diff'] = 'パスワード確認が相違しています' if params['passConf'] != params['pass']
 
         # 既存ユーザー名
-        #unless params['name'].nil?
-        #    errors['alr_user'] = '既に登録されているユーザ名です' if db_client.prepare("SELECT * FROM users WHERE name = ?").execute(params['name'])
-        #end
+        unless params['name'].nil?
+            errors['alr_user'] = '既に登録されているユーザ名です' if db_client.prepare("SELECT * FROM users WHERE name = ?").execute(params['name']).first
+        end
 
         # 文字列長不足
         unless params['pass'].nil? || params['pass'].empty?
@@ -52,4 +62,13 @@ class DbTUserManager
         
         return errors
     end
+
+    private def password_digest(pass)
+        securePass = ""
+        salt = "DPrtG32EBrlD@mX-kaO4sE++wwq2"
+        pass_digest = Digest::MD5.hexdigest(pass)
+        salt_digest = Digest::MD5.hexdigest(salt)
+        Digest::MD5.hexdigest(pass_digest + salt_digest)
+    end
+
 end

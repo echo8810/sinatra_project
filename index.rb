@@ -40,34 +40,41 @@ post '/account' do
       fails: errors.map{ |key, value| value }
     }
   else
-    erb :account, locals: {
-      fails: nil
-    }
+    redirect '/'
   end
 end
 
 post '/login' do
   dbUserM = DbTUserManager.new()
-  if user = dbUserM.user_fetch(params)
+  user = dbUserM.user_fetch(params)
+  @@logger.info user
+  if user
     session[:session_id] = SecureRandom.uuid
-    session_save(session[:session_id], { name: user[:name] })
+    session_save(session[:session_id], { name: user['name'] })
+    redirect '/chat'
+  else
+    erb :index, locals: {
+      fails: '入力内容に謝りがあります'
+    }
   end
-  redirect back
 end
 
-def logout()
+get '/logout' do
   session[:session_id] = nil
-  redirect 'account'
+  redirect '/'
 end
 
 ######################################################
 # チャット
 
 get '/chat' do
+  @@logger.info '--chat-----------'
+  @@logger.info session[:user_data]
   dbTChatM = DbTChatManager.new()
   chats = dbTChatM.chats_fetch()
   erb :chat, locals: {
-    chats: chats.map{ |chat| add_suffix(chat) }
+    chats: chats.map{ |chat| add_suffix(chat) },
+    name: session[:user_data][:name]
   }
 end
 
@@ -98,14 +105,15 @@ end
 ######################################################
 # セッション
 def session_save(session_id, obj)
-  db_client.prepare(
+  @@db_client.prepare(
     "INSERT into sessions (session_id, value_json) VALUES (?, ?)"
   ).execute(session_id, JSON.dump(obj))
+  session[:user_data] = obj
 end
 
-def session_fetch(session_id)
-  return if session_id == ""
-  result = db_client.prepare("SELECT * FROM sessions WHERE session_id = ?").execute(session_id).first
-  return unless result
-  JSON.parse(result&.[](:value_json))
-end
+#def session_fetch(session_id)
+#  return if session_id == ""
+#  result = @@db_client.prepare("SELECT * FROM sessions WHERE session_id = ?").execute(session_id).first
+#  return unless result
+#  JSON.parse(result&.[](:value_json))
+#end

@@ -21,3 +21,5 @@ gem "ruby-debug-ide"
 gem "debase"
 
 gem "rerun"
+
+gem 'bcrypt', '~> 3.1.7', require: 'bcrypt'
